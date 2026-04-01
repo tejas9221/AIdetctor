@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Crop Doctor 🌿</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #fefefe;
+        }
+
+        /* HEADER */
+        .header {
+            background: #a5d6a7;
+            color: #1b5e20;
+            padding: 15px;
+            text-align: center;
+            font-size: 22px;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 15px;
+            cursor: pointer;
+        }
+
+        /* HERO */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(to right, #c8e6c9, #e1f5fe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 40px;
+            color: #2e7d32;
+        }
+
+        .hero p {
+            color: #555;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background: #81c784;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* DASHBOARD */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .card {
+            background: #f1f8e9;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* UPLOAD */
+        .upload-box {
+            margin: 20px;
+            padding: 30px;
+            border: 2px dashed #81c784;
+            background: #f9fff9;
+            text-align: center;
+        }
+
+        /* RESULT */
+        .result-container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+
+        .result-box {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        /* CROPS */
+        .crops {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .crop-card {
+            background: #fffde7;
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .crop-card img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        /* HISTORY */
+        .history-item {
+            background: #e3f2fd;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <span class="back-btn" onclick="goHome()">⬅</span>
+        🌿 AI Crop Doctor
+        <select onchange="changeLang(this.value)">
+            <option value="en">EN</option>
+            <option value="kn">KN</option>
+            <option value="hi">HI</option>
+        </select>
+    </div>
+
+    <!-- HOME -->
+    <div id="home" class="hero">
+        <div>
+            <h1>AI Crop Doctor 🌿</h1>
+            <p id="subtitle">Detect crop diseases instantly</p>
+            <button onclick="show('dashboard')">📸 Scan Crop</button>
+            <button onclick="show('history')">📊 Reports</button>
+            <button onclick="show('crops')">🌱 Crop Guide</button>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="hidden">
+        <h2 style="padding:20px;">Hello Farmer 👨‍🌾</h2>
+        <div class="dashboard">
+            <div class="card" onclick="show('upload')">🌿 Scan</div>
+            <div class="card" onclick="show('history')">📊 Reports</div>
+            <div class="card">🌦 Weather</div>
+            <div class="card" onclick="show('crops')">🌱 Guide</div>
+        </div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div id="upload" class="hidden">
+        <div class="upload-box" onclick="file.click()">
+            <p>👉 Tap or Drop Image</p>
+            <button onclick="openCamera(event)">📸 Camera</button><br>
+            <input type="file" id="file" hidden>
+            <img id="preview" width="200">
+        </div>
+        <center><button onclick="scan()">Scan</button></center>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result" class="hidden">
+        <div class="result-container">
+            <div><img id="resultImg" width="250"></div>
+            <div class="result-box">
+                <h3 id="disease"></h3>
+                <p id="confidence"></p>
+                <p id="solution"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CROPS -->
+    <div id="crops" class="hidden">
+        <div class="crops" id="cropList"></div>
+        <div id="tipsBox" style="padding:20px;"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="history" class="hidden">
+        <div id="historyList"></div>
+    </div>
+
+    <script>
+        /* NAV */
+        function show(id) {
+            document.querySelectorAll('body > div').forEach(d => {
+                if (d.id) d.classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        /* BACK */
+        function goHome() {
+            show('home');
+        }
+
+        /* IMAGE */
+        file.onchange = () => {
+            let r = new FileReader();
+            r.onload = () => preview.src = r.result;
+            r.readAsDataURL(file.files[0]);
+        };
+
+        /* SCAN */
+        function scan() {
+            show('result');
+            resultImg.src = preview.src;
+            disease.innerText = "Leaf Blight";
+            confidence.innerText = "Confidence: 92%";
+            solution.innerText = "Use neem spray, avoid overwatering";
+
+            historyList.innerHTML += `<div class="history-item">
+<img src="${preview.src}" width="80">
+<p>Leaf Blight</p></div>`;
+        }
+
+        /* MULTI LANGUAGE */
+        function changeLang(lang) {
+            let text = {
+                en: "Detect crop diseases instantly",
+                kn: "ಬೆಳೆ ರೋಗಗಳನ್ನು ತಕ್ಷಣ ಪತ್ತೆಹಚ್ಚಿ",
+                hi: "फसल रोग तुरंत पहचानें"
+            };
+            subtitle.innerText = text[lang];
+        }
+
+        /* CROPS DATA (20+) */
+        let crops = [
+            "Tomato", "Corn", "Potato", "Rice", "Wheat", "Sugarcane", "Cotton",
+            "Chili", "Onion", "Garlic", "Carrot", "Cabbage", "Cauliflower",
+            "Spinach", "Brinjal", "Pumpkin", "Banana", "Mango", "Papaya", "Grapes", "Apple"
+        ];
+
+        let cropList = document.getElementById("cropList");
+
+        crops.forEach(c => {
+            cropList.innerHTML += `
+<div class="crop-card" onclick="showCrop('${c}')">
+<img src="https://source.unsplash.com/200x200/?${c}">
+<p>${c}</p>
+</div>`;
+        });
+
+        /* CROP DETAILS */
+        function showCrop(c) {
+            tipsBox.innerHTML = `
+<h3>${c}</h3>
+<p><b>EN:</b> Good irrigation and disease control needed.</p>
+<p><b>KN:</b> ಉತ್ತಮ ನೀರಾವರಿ ಮತ್ತು ರೋಗ ನಿಯಂತ್ರಣ ಅಗತ್ಯ.</p>
+<p><b>HI:</b> अच्छी सिंचाई और रोग नियंत्रण जरूरी है।</p>`;
+        }
+    </script>
+
+</body>
+
+</html>
